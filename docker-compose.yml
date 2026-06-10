@@ -1,0 +1,50 @@
+# docker-compose.yml (version 3.8) - Redis, three workers, and Nginx load balancer
+version: "3.8"
+services:
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  worker1:
+    build: .
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker2:
+    build: .
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker3:
+    build: .
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"    # Host port 8080 -> Nginx 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Mount the Nginx config
+    depends_on:
+      - worker1
+      - worker2
+      - worker3
+    restart: unless-stopped
+
+volumes:
+  redis-data:
